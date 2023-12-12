@@ -12,6 +12,7 @@ from seq2seq.data.dictionary import Dictionary
 from seq2seq.data.dataset import Seq2SeqDataset, BatchSampler
 from seq2seq.beam import BeamSearch, BeamSearchNode
 
+lambda_reg = 0.5
 
 def get_args():
     """ Defines generation-specific hyper-parameters. """
@@ -106,7 +107,8 @@ def main(args):
                 next_word = torch.where(best_candidate == tgt_dict.unk_idx, backoff_candidate, best_candidate)
                 log_p = torch.where(best_candidate == tgt_dict.unk_idx, backoff_log_p, best_log_p)
                 log_p = log_p[-1]
-
+                regularized_log_p = log_p - lambda_reg * (j ** 2)
+                log_p = regularized_log_p
                 # Store the encoder_out information for the current input sentence and beam
                 emb = encoder_out['src_embeddings'][:,i,:]
                 lstm_out = encoder_out['src_out'][0][:,i,:]
